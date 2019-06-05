@@ -43,6 +43,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.6"
+  cryptoutils:
+    dependency: "direct main"
+    description:
+      name: cryptoutils
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.0"
   csslib:
     dependency: transitive
     description:
@@ -109,6 +116,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.6"
+  mime_type:
+    dependency: "direct main"
+    description:
+      name: mime_type
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.2"
   path:
     dependency: "direct main"
     description:
@@ -137,6 +151,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.3"
+  rxdart:
+    dependency: "direct main"
+    description:
+      name: rxdart
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.22.0"
   sky_engine:
     dependency: transitive
     description: flutter

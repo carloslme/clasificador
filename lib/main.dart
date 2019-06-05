@@ -1,108 +1,26 @@
-//import 'package:flutter/material.dart';
-//import 'package:clasificador/src/pages/acercade.dart';
-//import 'package:clasificador/src/pages/ayuda.dart';
-//import 'package:clasificador/src/pages/clasificador.dart';
-//
-//import 'dart:math' as math;
-//import 'package:clasificador/src/pages/image.dart';
+
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:clasificador/providers/imagenes_provider.dart';
+import 'package:clasificador/src/pages/imagemodel.dart';
+import 'package:http/http.dart' as http;
 
-import 'package:clasificador/variables/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:clasificador/variables/globals.dart';
 
-//
-//
-//void main() {
-//  runApp(new MaterialApp(
-//      // Title
-//      title: "Clasificador de alimentos",
-//      // Home
-//      home: new MyHome()));
-//}
-//
-//class MyHome extends StatefulWidget {
-//  @override
-//  MyHomeState createState() => new MyHomeState();
-//}
-//
-//// SingleTickerProviderStateMixin is used for animation
-//class MyHomeState extends State<MyHome> with SingleTickerProviderStateMixin {
-//  // Create a tab controller
-//  TabController controller;
-//
-//  @override
-//  void initState() {
-//    super.initState();
-//
-//    // Initialize the Tab Controller
-//    controller = new TabController(length: 3, vsync: this);
-//  }
-//
-//  @override
-//  void dispose() {
-//    // Dispose of the Tab Controller
-//    controller.dispose();
-//    super.dispose();
-//  }
-//
-//  @override
-//  Widget build(BuildContext context) {
-//    return new Scaffold(
-//      // Appbar
-//      appBar: new AppBar(
-//        centerTitle: true ,
-//        // Title
-//        title: new Text("Clasificador de desayunos"),
-//        // Set the background color of the App Bar
-//        backgroundColor: Colors.blue,
-//      ),
-//      // Set the TabBar view as the body of the Scaffold
-//      body: new TabBarView(
-//        // Add tabs as widgets
-//        children: <Widget>[new Ayuda(), new Clasificador(), new AcercaDe()],
-//        // set the controller
-//        controller: controller,
-//      ),
-//      // Set the bottom navigation bar
-//      bottomNavigationBar: new Material(
-//        // set the color of the bottom navigation bar
-//        color: Colors.blue,
-//        // set the tab bar as the child of bottom navigation bar
-//        child: new TabBar(
-//          tabs: <Tab>[
-//            new Tab(
-//              text: 'Ayuda',
-//              // set icon to the tab
-//              icon: new Icon(Icons.help),
-//            ),
-//            new Tab(
-//              text: 'Clasificador',
-//              icon: new Icon(Icons.image),
-//            ),
-//            new Tab(
-//              text: 'Acerca de',
-//              icon: new Icon(Icons.info),
-//            ),
-//          ],
-//          // setup the controller
-//          controller: controller,
-//        ),
-//      ),
-//    );
-//  }
-// }
 
-// This app is a stateful, it tracks the user's current choice.
-
+// VARIABLES LOCALES
 int contadorImg = 0;
-List<String> _imagenes = [
-
-  ];
+List<String> _imagenes = []; // Arreglo de imagenes par enviar
 File _imageFile;
-
 var paramsImage;
+String serverResponse = 'Server response';
+Uint8ClampedList base64Data = null;
+final servicio = new ImagenesProvider();
+bool banderaEscena = false;
+bool mostrarTexto = false;
 
 
 @override
@@ -121,15 +39,29 @@ class MainPage extends StatefulWidget {
   MainPage({this.title}) : super();
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return new MainPageState(); //Return a state object
   }
 }
 
 class MainPageState extends State<MainPage> {
   Choice _selectedChoice = choices[0]; // The app's "state".
-
-  // Contiene la lista de las imagenes y su path que se han tomado para poder desplegarlas en el gridview
+  final formKey = GlobalKey<FormState>();
+  String escena = '';
+  String porcentaje = '';
+  List<String> materiales = []; 
+  String imagen1 = '';
+  String imagen2 = '';
+  String imagen3 = '';
+  String imagen4 = '';
+  String imagen5 = '';
+  String americano = '';
+  String cafetero = '';
+  String light = '';
+  String paisa = '';
+  String rolo = '';
+  List<String> values;
+  bool _sEnabled = false;
+  bool _aEnabled = false;
 
   void _select(Choice choice) {
     // Causes the app to rebuild with the new _selectedChoice.
@@ -141,7 +73,6 @@ class MainPageState extends State<MainPage> {
   //State must have "build" => return Widget
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return new Scaffold(
         appBar: new AppBar(
           title: new Text("Clasificador"),
@@ -153,7 +84,7 @@ class MainPageState extends State<MainPage> {
                 _select(choices[0]);
                 print("Boton 0");
                 setState(() {
-                  _imagenes.add('data/img/image02.jpg');
+                  _limpiarTodo();
                 });
               },
             ),
@@ -161,6 +92,7 @@ class MainPageState extends State<MainPage> {
             IconButton(
               icon: Icon(choices[1].icon),
               onPressed: () {
+                showAlertVerAyuda(context);
                 setState(() {
                   _select(choices[1]);
                   print("Boton 1");
@@ -174,26 +106,20 @@ class MainPageState extends State<MainPage> {
             IconButton(
               icon: Icon(choices[2].icon),
               onPressed: () {
+                showAlertVerInfo(context);
                 _select(choices[2]);
                 print("Boton 2");
               },
             ),
           ],
         ),
-        body: Center(
-          child: Column(
+        body: SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.all(15.0),
+            child: Form(
+              key: formKey,
+              child: Column(
               children: [
-//          new Expanded(
-//            child: Card(
-//                child: new GridView.extent(
-//                    maxCrossAxisExtent: 130.0,
-//                    mainAxisSpacing: 5.0,
-//                    crossAxisSpacing: 5.0,
-//                    padding: const EdgeInsets.all(5.0),
-//                    children: _buildGridTiles(5)
-//                )
-//            ),
-//          ),
                 new SizedBox(height: 100),
                 new Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,66 +148,101 @@ class MainPageState extends State<MainPage> {
                             )
                     ).toList()
                 ),
+                new Padding(padding: EdgeInsets.only(bottom: 20.0)),
+                Visibility(
+                  child: Text("Desayuno detectado:",style: TextStyle(fontSize: 16.0),),
+                  maintainSize: true, 
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: mostrarTexto, 
+                ),
+                Visibility(
+                  child: new Text("$escena",style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),),
+                  maintainSize: true, 
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: mostrarTexto, 
+                ),
+                new Padding(padding: EdgeInsets.only(bottom: 15.0)),
+                Visibility(
+                  child:  new Text("% probabilidad:",style: TextStyle(fontSize: 16.0),),
+                  maintainSize: true, 
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: mostrarTexto, 
+                ),
+                Visibility(
+                  child:  new Text("$porcentaje",style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),),
+                  maintainSize: true, 
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: mostrarTexto, 
+                ),
+                new Padding(padding: EdgeInsets.only(bottom: 15.0)),
+                Visibility(
+                  child: ListTile(
+                  title: new Center(child: new Text( 'Ver detalles desayuno', style:  TextStyle(fontSize: 13.0, color: Colors.black54) )),
+                    onTap: () {                          
+                      showAlertVerDetalles(context);
+                    }, 
+                  ),
+                  maintainSize: true, 
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: mostrarTexto, 
+                ),
               ]),
+            ),
+          ),
         ),
-        floatingActionButton: Column(
+        floatingActionButton: 
+        Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
-              FloatingActionButton(
-                onPressed: () {
-                  if (_imagenes.length < 5) {
-                    try{
-                      _getImages(context, ImageSource.gallery);
-                      print("Cargar imagen");
-                    } catch(e) {
-                      print('error caught: $e');
-                    }
+              Padding(
+                  padding: const EdgeInsets.only(top: 5.0),
+                  child: _crearBotonSeleccionarFoto(context),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 5.0),
+                child: _crearBotonTomarFoto(context),
+              ),
+              Padding(
+                  padding: const EdgeInsets.only(top: 5.0),
+                  child: _crearBotonSubirFotos(context)
+                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 5.0),
+                child: _crearBotonAnalizarFotos(context)
+              ),
 
-                  } else {
-                    print("Entro a ELSE");
-                    showAlertDialog(context);
-                  }
-                },
-                heroTag: 'image0',
-                tooltip: 'Pick Image from gallery',
-                child: const Icon(Icons.add_photo_alternate),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: FloatingActionButton(
-                  onPressed: () {
-                    if (_imagenes.length < 5) {
-                      _getImages(context, ImageSource.camera);
-                      print("Cargar imagen");
-                    } else {
-                      print("Entro a ELSE");
-                      showAlertDialog(context);
-                    }
-                  },
-                  heroTag: 'image1',
-                  tooltip: 'Take a Photo',
-                  child: const Icon(Icons.add_a_photo),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: RaisedButton.icon(
-                  color: Colors.blue,
-                  label: Text('Clasificar'), textColor: Colors.white,
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    if (_imagenes.length < 2) {
-                      print("Alerta mínimo dos imágenes para poder clasificar");
-                      showAlertDosImg(context);
-                    }
-                  },
-                ),
-              ),
-            ]
-        ),
+            ])
     );
   }
-
+   Widget _crearItem(BuildContext context, ImagenModel producto ) {
+    return Dismissible(
+      key: UniqueKey(),
+      background: Container(
+        color: Colors.red,
+      ),
+      // onDismissed: ( direccion ){
+      //   productosProvider.borrarProducto(producto.id);
+      // },
+      child: Card(
+        child: Column(
+          children: <Widget>[
+            ListTile(
+              title: Text('${ producto.escena }'),
+              subtitle: Text( 'Prueba' ),
+              onTap: () {                          
+                print("tapped on container");
+              }, 
+            ),
+          ],
+        ),
+      )
+    );
+  }
 
   showAlertDialog(BuildContext context) {
     // set up the button
@@ -293,8 +254,8 @@ class MainPageState extends State<MainPage> {
     );
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text("Alerta"),
-      content: Text("Solo se pueden capturar máximo 5 imágenes."),
+      title: Text("Solo se pueden cargar máximo 5 imágenes"),
+      content: Text(serverResponse),
       actions: [
         okButton,
       ],
@@ -331,33 +292,328 @@ class MainPageState extends State<MainPage> {
       },
     );
   }
+  showAlertSinImg(BuildContext context) {
+    // set up the button
+    Widget okButton = FlatButton(
+      child: Text("Ok"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Alerta"),
+      content: Text("Primero debe subir las imágenes."),
+      actions: [
+        okButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+  showAlertResponse(BuildContext context) {
+    // set up the button
+    Widget okButton = FlatButton(
+      child: Text("Ok"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Alerta"),
+      content: Text(serverResponse),
+      actions: [
+        okButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+  showAlertVerDetalles(BuildContext context) {
+    // set up the button
+    Widget okButton = FlatButton(
+      child: Text("Ok"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Porcentajes"),
+      content: Text('% Paisa: $paisa \n % Cafetero: $cafetero \n % Rolo: $rolo \n % Americano: $americano \n % Light: $light \n'),
+      actions: [
+        okButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+  showAlertVerDetallesAlimentos(BuildContext context) {
+    // set up the button
+    Widget okButton = FlatButton(
+      child: Text("Ok"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Porcentajes"),
+      content: Text('% Paisa: $paisa \n % Cafetero: $cafetero \n % Rolo: $rolo \n % Americano: $americano \n % Light: $light \n'),
+      actions: [
+        okButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+  showAlertVerAyuda(BuildContext context) {
+    // set up the button
+    Widget okButton = FlatButton(
+      child: Text("Ok"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Ayuda"),
+      content: Text('1) Para comenzar añade alguna imagen o toma un par de fotos.\n 2) Da clic en Subir. \n 3) Da clic en Analizar. \n * Para quitar una imagen de la lista solo tócala.'),
+      actions: [
+        okButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
-  void _getImages(BuildContext context, ImageSource source) {
+  showAlertVerInfo(BuildContext context) {
+    // set up the button
+    Widget okButton = FlatButton(
+      child: Text("Ok"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Acerca de"),
+      content: Text('Esta es una app que clasifica imágenes y las analiza en conjunto para identificar desayunos colombianos. \nHace uso de redes neuronales convolucionales y artificiales. Está escrita en Python y hace uso de librerías con Keras y OpenCV. \nVersion 1.0'),
+      actions: [
+        okButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  void _getImages(BuildContext context, ImageSource source) async {
     ImagePicker.pickImage(source: source).then((File image) {
       setState((){
-        print("/////////////// Entra a _getImage");
-//        _imagenes.add(_imageFile.toString());
         _imageFile = image;
         var cadena = _imageFile.toString();
         String path = cadena.substring(6,cadena.length);
         String path2 = cadena.substring(7,cadena.length-1);
         print("--------  " + path);
         print("++++++++  " + path2);
-        _imagenes.add(path2);
-        List<int> imageBytes = _imageFile.readAsBytesSync();
-        print(imageBytes);
-        String base64Image = base64Encode(imageBytes);
-        print("base64: " + base64Image);
+        print('path: ' + image.path);
 
-        print("paramsImage: " + paramsImage.toString());
+        _imagenes.add(path2); // Listado de imagenes para mostrar en pantalla
+        // // PRUEBA: Se sube la imagen al servidor
+        // servicio.subirImagenFlask(image);
 
       });
 //      Navigator.pop(context);
     });
   }
-  void converToBase64(BuildContext context, File source){
-//    List<int> imageBytes = widget.source.readAsBytesSync();
+
+  int enviarImagenes(){
+    print('Tamaño del arreglo de imagenes: ' + _imagenes.length.toString());
+    int tamanio = _imagenes.length;
+    
+    print(json.encode(_imagenes));
+    for (var i = 0; i < tamanio; i++) {
+        print(_imagenes[i]);
+        var imagenAEnviar = new File(_imagenes[i]);
+        servicio.subirImagenFlask(imagenAEnviar).toString();  
+        if ( pathAux == 'listo') {
+          print('Ningun error al enviar imagen.');
+        } else {
+          print('Error al enviar imagen: ' + pathAux);
+        }
+    }
+    if ( _imagenes.contains(pathAux) ) {
+      print('Sin contiene el PATH:' + pathAux);
+      setState(() {
+        _imagenes.removeWhere((item) => item == pathAux.toString());
+      });
+     
+    }
+    return 1;
   }
+
+  _crearBotonSeleccionarFoto(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () {
+        if (_imagenes.length < 5) {
+          try{
+            _getImages(context, ImageSource.gallery);
+            print("Cargar imagen");
+          } catch(e) {
+            print('error caught: $e');
+          }
+
+        } else {
+          print("Entro a ELSE");
+          showAlertDialog(context);
+        }
+      },
+      heroTag: 'image0',
+      tooltip: 'Pick Image from gallery',
+      child: const Icon(Icons.add_photo_alternate),
+    );
+  }
+
+  _crearBotonTomarFoto(BuildContext context) {
+    return FloatingActionButton(
+        onPressed: () {
+          if (_imagenes.length < 5) {
+            _getImages(context, ImageSource.camera);
+            print("Cargar imagen");
+          } else {
+            print("Entro a ELSE");
+            showAlertDialog(context);
+          }
+        },
+        heroTag: 'image1',
+        tooltip: 'Take a Photo',
+        child: const Icon(Icons.add_a_photo),
+    );
+  }
+  _crearBotonSubirFotos(BuildContext context) {
+    return RaisedButton.icon(
+      color: Colors.blue,
+      label: Text('Subir'), textColor: Colors.white,
+      icon: Icon(Icons.send),
+      onPressed: () {
+        if (_imagenes.length < 2) {
+          print("Alerta mínimo dos imágenes para poder clasificar");
+          showAlertDosImg(context);
+        } else {
+          // Se envian las imagenes siempre que sean mayores a 2 e inferiores a 5
+          var envio = enviarImagenes();
+          if (envio != 1) {
+            print('Error al enviar imágenes');
+          } else {
+            print('Imágenes enviadas');
+          }
+          banderaEscena = true;
+        
+        }
+      },
+    );
+  }
+
+  _crearBotonAnalizarFotos(BuildContext context) {
+    return RaisedButton.icon(
+      color: Colors.blue,
+      label: Text('Analizar'), textColor: Colors.white,
+      icon: Icon(Icons.center_focus_strong),
+      onPressed: () {
+        if (banderaEscena == false) {
+          print("Aún no ha subido las imágenes");
+          showAlertSinImg(context);
+        } else {
+        _crearListado();
+        // setState(() {
+        //           mostrarTexto = true
+        //         });
+        banderaEscena= false;
+        }
+      },
+    );
+  }
+  _limpiarTodo() {
+    setState(() {
+      escena = '';
+      porcentaje = '';
+      imagen1 = '';
+      imagen2 = '';
+      imagen3 = '';
+      imagen4 = '';
+      imagen5 = '';
+      americano = '';
+      cafetero = '';
+      light = '';
+      paisa = '';
+      rolo = '';
+      _imagenes = [];   
+      mostrarTexto = false;   
+    });
+      
+  }
+   Future <Widget> _crearListado() async {
+      // var respuesta = servicio.peticionEscena();
+      final urlLocal = Uri.parse('http://10.0.2.2:5000/analizarEscena');  
+      var res = await http.get(urlLocal,headers: {"Accept":"application/json"});
+      var resBody = json.decode(res.body);
+      print('LISTADO');
+      print(resBody);
+      escena = resBody['escena'];
+      porcentaje = resBody['porcentaje'];
+      print('La escena es: ' + escena);
+
+        
+
+      americano = resBody["probabilidades"]["Americano"];
+      cafetero = resBody["probabilidades"]["Cafetero"];
+      light = resBody["probabilidades"]["Light"];
+      paisa = resBody["probabilidades"]["Paisa"];
+      rolo = resBody["probabilidades"]["Rolo"];
+
+      // imagen1 = ["materiales"][""];
+      // imagen2 = '';
+      // imagen3 = '';
+      // imagen4 = '';
+      // imagen5 = '';
+
+      
+      setState(() {
+        print("Success");
+        mostrarTexto = true;
+      });
+    }
 }
 
 List<Widget> _buildGridTiles(numberOfTiles) {
@@ -395,7 +651,7 @@ class Choice {
 }
 
 const List<Choice> choices = const <Choice>[
-  const Choice(title: 'Clasificador', icon: Icons.image),
+  const Choice(title: 'Nuevo', icon: Icons.refresh),
   const Choice(title: 'Ayuda', icon: Icons.help),
   const Choice(title: 'Información', icon: Icons.info),
 ];
@@ -424,5 +680,14 @@ class ChoiceCard extends StatelessWidget {
   }
 }
 
-
-
+//          new Expanded(
+//            child: Card(
+//                child: new GridView.extent(
+//                    maxCrossAxisExtent: 130.0,
+//                    mainAxisSpacing: 5.0,
+//                    crossAxisSpacing: 5.0,
+//                    padding: const EdgeInsets.all(5.0),
+//                    children: _buildGridTiles(5)
+//                )
+//            ),
+//          ),
